@@ -71,7 +71,7 @@ await neon.operations.waitFor({ operations });
 await neon.projects.createAndConnect({ name: "app", pooled: false });
 ```
 
-`throwOnError`, `waitForReadiness`, `requestTimeoutMs`, `wait`, and `signal` stay on `CallOptions` and on `createNeonClient`. Database rename uses `databaseName` for the current name and `name` for the replacement. Payload field spelling is unchanged. The raw client is unchanged.
+`throwOnError`, `waitForReadiness`, `requestTimeoutMs`, and `wait` stay on `CallOptions` and on `createNeonClient`. `signal` is CallOptions-only. Database rename uses `databaseName` for the current name and `name` for the replacement. Payload field spelling is unchanged. The raw client is unchanged.
 
 ## The result model
 
