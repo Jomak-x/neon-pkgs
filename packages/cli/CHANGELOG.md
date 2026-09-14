@@ -1,5 +1,23 @@
 # neon
 
+## 4.17.3
+
+### Patch Changes
+
+- 0607d8e: Name `aws-eu-central-1` alongside `aws-us-east-2` in neon.ts unavailable-feature errors and `neon logs` help.
+- Updated dependencies [0607d8e]
+  - @neon/config@1.4.2
+  - @neon/config-runtime@1.3.2
+
+## 4.17.2
+
+### Patch Changes
+
+- Updated dependencies [ad78f8b]
+  - @neon/sdk@4.2.0
+  - @neon/config@1.4.1
+  - @neon/config-runtime@1.3.1
+
 ## 4.17.1
 
 ### Patch Changes
