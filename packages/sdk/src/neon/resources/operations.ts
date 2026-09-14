@@ -5,7 +5,11 @@ import {
 import type { Operation } from "../../client/types.gen.js";
 import type { CallOptions, RequestContext } from "../context.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import type { NeonResult, Outcome } from "../result.js";
 import { type WaitForOptions, waitForOperations } from "../wait.js";
 
@@ -41,9 +45,10 @@ export class Operations<DThrow extends boolean> {
 		params: OperationsListParams,
 		opts?: CallOptions,
 	): Paginated<Operation, boolean> {
-		const invalid = validateParams(params, "operations.list", {
-			projectId: "string",
-		});
+		const invalid =
+			validateParams(params, "operations.list", {
+				projectId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId } = invalid ? ({} as OperationsListParams) : params;
 		return paginate(
 			async (cursor, signal) => {
@@ -113,9 +118,10 @@ export class Operations<DThrow extends boolean> {
 		params: OperationsWaitForParams,
 		opts?: WaitForForOptions<boolean>,
 	): Promise<void | NeonResult<void>> {
-		const invalid = validateParams(params, "operations.waitFor", {
-			operations: "array",
-		});
+		const invalid =
+			validateParams(params, "operations.waitFor", {
+				operations: "array",
+			}) ?? validateCallOptions(opts);
 		if (invalid) {
 			return invalidParamsResult<void>(
 				invalid,

@@ -30,7 +30,11 @@ import { withConnectionString } from "../connection.js";
 import type { CallOptions, RequestContext } from "../context.js";
 import { NeonClientError } from "../errors.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import { err, finalize, type NeonResult, type Outcome } from "../result.js";
 
 /** Input for {@link Projects.transfer} (org → org). */
@@ -265,9 +269,10 @@ export class Members<DThrow extends boolean> {
 		params: ProjectMemberListParams,
 		opts?: CallOptions,
 	): Paginated<ProjectMember, boolean> {
-		const error = validateParams(params, "projects.members.list", {
-			projectId: "string",
-		});
+		const error =
+			validateParams(params, "projects.members.list", {
+				projectId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId, ...query } = error
 			? ({} as ProjectMemberListParams)
 			: params;
@@ -416,9 +421,11 @@ export class Projects<DThrow extends boolean> {
 		query: ProjectListParams = {},
 		opts?: CallOptions,
 	): Paginated<ProjectListItem, boolean> {
+		const invalid = validateCallOptions(opts);
 		return paginate(
-			(cursor, signal) =>
-				listProjects({
+			async (cursor, signal) => {
+				if (invalid) throw invalid;
+				return listProjects({
 					client: this.#ctx.client,
 					query: {
 						org_id: this.#ctx.defaults.orgId,
@@ -427,7 +434,8 @@ export class Projects<DThrow extends boolean> {
 					},
 					throwOnError: false,
 					signal,
-				}),
+				});
+			},
 			(data) => ({
 				items: data?.projects ?? [],
 				cursor: data?.pagination?.cursor,

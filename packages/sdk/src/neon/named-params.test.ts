@@ -220,4 +220,140 @@ describe("named operation inputs", () => {
 		).toBe("true");
 		expect(await requestAt(requests, 1).text()).toBe("");
 	});
+
+	it("rejects relocated fields left on a shared options object before fetching", async () => {
+		const fetch = vi.fn(async () => new Response("{}"));
+		const client = createNeonClient({
+			apiKey: "unused",
+			fetch,
+			retries: 0,
+		});
+		const options = { pooled: false, waitForReadiness: false };
+		const project = await client.projects.createAndConnect(
+			{ name: "app" },
+			options,
+		);
+		expect(project).toMatchObject({
+			error: {
+				kind: "client",
+				message: expect.stringContaining("pooled"),
+			},
+		});
+		await expect(
+			client.projects.createAndConnect(
+				{ name: "app" },
+				{ ...options, throwOnError: true },
+			),
+		).rejects.toBeInstanceOf(NeonClientError);
+		const branch = await client.branches.createAndConnect(
+			{ projectId: "p" },
+			options,
+		);
+		expect(branch).toMatchObject({ error: { kind: "client" } });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("rejects confirmation flags left in execution options before fetching", async () => {
+		const fetch = vi.fn(async () => new Response("{}"));
+		const client = createNeonClient({
+			apiKey: "unused",
+			fetch,
+			retries: 0,
+		});
+		const demote = { confirmSelfDemotion: true, throwOnError: false };
+		const setRole = await client.projects.members.setRole(
+			{ projectId: "p", memberId: "m", role: "viewer" },
+			demote,
+		);
+		expect(setRole).toMatchObject({
+			error: {
+				kind: "client",
+				message: expect.stringContaining("confirmSelfDemotion"),
+			},
+		});
+		const lockout = { confirmSelfLockout: true, waitForReadiness: false };
+		const removeRole = await client.projects.members.removeRole(
+			{ projectId: "p", memberId: "m" },
+			lockout,
+		);
+		expect(removeRole).toMatchObject({ error: { kind: "client" } });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("rejects relocated options on lazy lists and waitFor before fetching", async () => {
+		const fetch = vi.fn(async () => new Response("{}"));
+		const client = createNeonClient({
+			apiKey: "unused",
+			fetch,
+			retries: 0,
+		});
+		const options = { pooled: false, throwOnError: false };
+		const list = client.functions.list(
+			{ projectId: "p", branchId: "b" },
+			options,
+		);
+		expect(fetch).not.toHaveBeenCalled();
+		await expect(list.all()).resolves.toMatchObject({
+			error: { kind: "client" },
+		});
+		await expect(
+			client.operations.waitFor({ operations: [] }, options),
+		).resolves.toMatchObject({ error: { kind: "client" } });
+		await expect(
+			client.postgres.connectionString({ projectId: "p" }, options),
+		).resolves.toMatchObject({ error: { kind: "client" } });
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
+	it("keeps pooled on the input and honours client and per-call execution options", async () => {
+		const requests: Request[] = [];
+		const fetch = vi.fn(
+			async (input: RequestInfo | URL, init?: RequestInit) => {
+				requests.push(
+					input instanceof Request ? input : new Request(input, init),
+				);
+				return Response.json({
+					project: { id: "p-1" },
+					connection_uris: [
+						{
+							connection_uri: "postgresql://u:pw@ep-host/db",
+							connection_parameters: {
+								host: "ep-host",
+								pooler_host: "ep-pooler",
+							},
+						},
+					],
+					operations: [],
+				});
+			},
+		);
+		const client = createNeonClient({
+			apiKey: "unused",
+			fetch,
+			retries: 0,
+			throwOnError: true,
+			waitForReadiness: true,
+			orgId: "org-1",
+			requestTimeoutMs: 30_000,
+		});
+		const data = await client.projects.createAndConnect(
+			{ name: "app", pooled: false },
+			{ waitForReadiness: false, throwOnError: true },
+		);
+		expect(data.connectionString).toBe("postgresql://u:pw@ep-host/db");
+		expect(fetch).toHaveBeenCalledTimes(1);
+		expect(await requestAt(requests, 0).json()).toEqual({
+			project: { name: "app", org_id: "org-1" },
+		});
+		const envelope = await client.projects.createAndConnect(
+			{ name: "app", pooled: true },
+			{ waitForReadiness: false, throwOnError: false },
+		);
+		expect(envelope).toMatchObject({
+			data: {
+				connectionString: "postgresql://u:pw@ep-pooler/db",
+			},
+		});
+		expect(fetch).toHaveBeenCalledTimes(2);
+	});
 });

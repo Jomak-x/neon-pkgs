@@ -14,7 +14,11 @@ import type {
 } from "../../client/types.gen.js";
 import type { CallOptions, RequestContext } from "../context.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import type { NeonResult, Outcome } from "../result.js";
 import { CustomDomains } from "./custom-domains.js";
 
@@ -57,10 +61,11 @@ export class Functions<DThrow extends boolean> {
 		params: FunctionsListParams,
 		opts?: CallOptions,
 	): Paginated<NeonFunction, boolean> {
-		const invalid = validateParams(params, "functions.list", {
-			projectId: "string",
-			branchId: "string",
-		});
+		const invalid =
+			validateParams(params, "functions.list", {
+				projectId: "string",
+				branchId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId, branchId, ...query } = invalid
 			? ({} as FunctionsListParams)
 			: params;

@@ -81,4 +81,16 @@ it("workflow fields belong to operation inputs, not execution options", () => {
 	const removeOptions: RemoveRoleOptions = { confirmSelfLockout: true };
 	void setOptions;
 	void removeOptions;
+
+	const options = {
+		throwOnError: true as const,
+		waitForReadiness: false,
+		requestTimeoutMs: 5_000,
+		wait: { timeoutMs: 1_000, pollIntervalMs: 100 },
+	};
+	client.projects.createAndConnect({ name: "app", pooled: false }, options);
+	client.branches.get(
+		{ projectId: "p", branchId: "b" },
+		{ signal: new AbortController().signal },
+	);
 });

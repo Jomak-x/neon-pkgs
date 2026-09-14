@@ -10,7 +10,11 @@ import type {
 } from "../../client/types.gen.js";
 import type { CallOptions, RequestContext } from "../context.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import type { NeonResult, Outcome } from "../result.js";
 
 type ListQuery = Omit<
@@ -51,10 +55,11 @@ export class CustomDomains<DThrow extends boolean> {
 		params: CustomDomainsListParams,
 		opts?: CallOptions,
 	): Paginated<CustomDomain, boolean> {
-		const invalid = validateParams(params, "functions.customDomains.list", {
-			projectId: "string",
-			branchId: "string",
-		});
+		const invalid =
+			validateParams(params, "functions.customDomains.list", {
+				projectId: "string",
+				branchId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId, branchId, ...query } = invalid
 			? ({} as CustomDomainsListParams)
 			: params;

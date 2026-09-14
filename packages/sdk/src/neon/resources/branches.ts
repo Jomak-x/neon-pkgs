@@ -21,7 +21,11 @@ import { withConnectionString } from "../connection.js";
 import type { CallOptions, RequestContext } from "../context.js";
 import { NeonClientError } from "../errors.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import { err, finalize, type NeonResult, type Outcome, ok } from "../result.js";
 
 type ListQuery = Omit<NonNullable<ListProjectBranchesData["query"]>, "cursor">;
@@ -136,9 +140,10 @@ export class Branches<DThrow extends boolean> {
 		params: BranchListParams,
 		opts?: CallOptions,
 	): Paginated<Branch, boolean> {
-		const error = validateParams(params, "branches.list", {
-			projectId: "string",
-		});
+		const error =
+			validateParams(params, "branches.list", {
+				projectId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId, ...query } = error
 			? ({} as BranchListParams)
 			: params;

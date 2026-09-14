@@ -7,7 +7,7 @@ Two layers, one package:
 - **`createNeonClient`** — an ergonomic client (auth once, `{ data, error }` results, typed errors, retries, readiness polling, auto-pagination, workflows), organized into resource namespaces.
 - **`raw`** — the full generated 1:1 surface: every endpoint as a standalone, tree-shakeable function. Also at the `@neon/sdk/raw` subpath.
 
-The next major release changes ergonomic resource methods to named parameter objects.
+This major release takes named parameter objects on ergonomic resource methods.
 
 ---
 
@@ -53,7 +53,25 @@ const { project, connectionString } = data;
 | `baseUrl` | `string` | `https://console.neon.tech/api/v2` | Override the API base URL. |
 | `fetch` | `typeof fetch` | global `fetch` | Custom fetch implementation (proxies, tests, non-global runtimes). |
 
-`CallOptions` — `{ throwOnError?, waitForReadiness?, requestTimeoutMs?, wait?, signal? }` — is accepted **per call** as the last `options` argument, overriding the client default where one exists (`signal` is call-only). `retries`, `orgId`, `baseUrl`, and `fetch` are client-wide. Resource identifiers and request fields live together in the first named parameter object; paginated methods still take `CallOptions` second.
+`CallOptions` — `{ throwOnError?, waitForReadiness?, requestTimeoutMs?, wait?, signal? }` — is accepted **per call** as the last `options` argument, overriding the client default where one exists (`signal` is call-only). `retries`, `orgId`, `baseUrl`, and `fetch` are client-wide. Resource identifiers and request fields live together in the first named parameter object; paginated methods still take `CallOptions` second. `pooled`, `confirmSelfDemotion`, and `confirmSelfLockout` belong in that input object. Passing them on `CallOptions` is a client error, including when they ride along on a shared options variable.
+
+---
+
+## Migrating from v4
+
+```ts
+// v4
+await neon.branches.delete(projectId, branchId);
+await neon.operations.waitFor(operations);
+await neon.projects.createAndConnect({ name: "app" }, { pooled: false });
+
+// v5
+await neon.branches.delete({ projectId, branchId });
+await neon.operations.waitFor({ operations });
+await neon.projects.createAndConnect({ name: "app", pooled: false });
+```
+
+`throwOnError`, `waitForReadiness`, `requestTimeoutMs`, `wait`, and `signal` stay on `CallOptions` and on `createNeonClient`. Database rename uses `databaseName` for the current name and `name` for the replacement. Payload field spelling is unchanged. The raw client is unchanged.
 
 ## The result model
 

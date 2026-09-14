@@ -13,7 +13,11 @@ import type {
 import type { CallOptions, RequestContext } from "../context.js";
 import { NeonClientError } from "../errors.js";
 import { type Paginated, paginate } from "../paginate.js";
-import { invalidParamsResult, validateParams } from "../params.js";
+import {
+	invalidParamsResult,
+	validateCallOptions,
+	validateParams,
+} from "../params.js";
 import type { NeonResult, Outcome } from "../result.js";
 
 /**
@@ -83,10 +87,11 @@ export class Logs<DThrow extends boolean> {
 		params: LogsQueryParams,
 		opts?: CallOptions,
 	): Paginated<ProjectBranchLogRecord, boolean> {
-		const invalid = validateParams(params, "logs.query", {
-			projectId: "string",
-			branchId: "string",
-		});
+		const invalid =
+			validateParams(params, "logs.query", {
+				projectId: "string",
+				branchId: "string",
+			}) ?? validateCallOptions(opts);
 		const { projectId, branchId, ...input } = invalid
 			? ({} as LogsQueryParams)
 			: params;

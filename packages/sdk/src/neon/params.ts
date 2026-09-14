@@ -27,6 +27,27 @@ export function validateParams(
 	return undefined;
 }
 
+const RELOCATED_CALL_OPTIONS = [
+	"pooled",
+	"confirmSelfDemotion",
+	"confirmSelfLockout",
+] as const;
+
+/** Relocated v4 option keys must not be ignored on a shared CallOptions object. */
+export function validateCallOptions(
+	opts: object | undefined,
+): NeonClientError | undefined {
+	if (opts === undefined) return undefined;
+	for (const name of RELOCATED_CALL_OPTIONS) {
+		if (Object.hasOwn(opts, name)) {
+			return new NeonClientError(
+				`${name} belongs in the operation input, not in execution options.`,
+			);
+		}
+	}
+	return undefined;
+}
+
 /** Keep invalid JavaScript inputs on the same async result/throw contract. */
 export async function invalidParamsResult<T>(
 	error: NeonClientError,
