@@ -7,8 +7,7 @@ Two layers, one package:
 - **`createNeonClient`** — an ergonomic client (auth once, `{ data, error }` results, typed errors, retries, readiness polling, auto-pagination, workflows), organized into resource namespaces.
 - **`raw`** — the full generated 1:1 surface: every endpoint as a standalone, tree-shakeable function. Also at the `@neon/sdk/raw` subpath.
 
-The next major release changes ergonomic resource methods to named parameter objects. If
-you are upgrading existing code, start with [Migrating to named parameters](./MIGRATION.md).
+The next major release changes ergonomic resource methods to named parameter objects.
 
 ---
 

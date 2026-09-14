@@ -9,7 +9,7 @@ export function validateParams(
 ): NeonClientError | undefined {
 	if (value === null || typeof value !== "object" || Array.isArray(value)) {
 		return new NeonClientError(
-			`${method} expects a named parameter object. See the SDK migration guide.`,
+			`${method} expects a named parameter object.`,
 		);
 	}
 	const params = value as Record<string, unknown>;
